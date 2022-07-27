@@ -4,7 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
+	"sort"
+	"strings"
 
+	markdown "github.com/MichaelMure/go-term-markdown"
 	"github.com/mmcdole/gofeed"
 )
 
@@ -24,9 +28,11 @@ func main() {
 	// parse the config file
 	scanner := bufio.NewScanner(file)
 	index := 1
+	var feeds []*gofeed.Feed
 	for scanner.Scan() {
 		// get all the title of each link and show as a list
 		feed, err := fp.ParseURL(scanner.Text())
+		feeds = append(feeds, feed)
 		if err != nil {
 			panic(err)
 		}
@@ -39,9 +45,38 @@ func main() {
 
 	// make user choose what to view
 	fmt.Printf("What would you like to view? ")
-	var choice int
-	fmt.Scanf("%2d", choice)
+	choice := 0
+	fmt.Scanln(&choice)
 
-	// parse url and show content/entries
+	// parse url and show list of items
+	feed := feeds[choice-1]
+	fmt.Printf("\n%s\n", feed.Title)
+	for i, item := range feed.Items {
+		fmt.Println(i, item.Title)
+	}
 
+	// make user choose what to view
+	fmt.Printf("What would you like to view? ")
+	fmt.Scanln(&choice)
+
+	// show item contents
+	desc := markdown.Render(RemoveHtmlTag(feed.Items[choice].Description), 80, 6)
+	fmt.Printf("\n%v\n\n%v\n%v\n", feed.Items[choice].Title, string(desc), feed.Items[choice].Link)
+}
+
+func RemoveHtmlTag(in string) string {
+	// regex to match html tag
+	const pattern = `(<\/?[a-zA-A]+?[^>]*\/?>)*`
+	r := regexp.MustCompile(pattern)
+	groups := r.FindAllString(in, -1)
+	// should replace long string first
+	sort.Slice(groups, func(i, j int) bool {
+		return len(groups[i]) > len(groups[j])
+	})
+	for _, group := range groups {
+		if strings.TrimSpace(group) != "" {
+			in = strings.ReplaceAll(in, group, "")
+		}
+	}
+	return in
 }
