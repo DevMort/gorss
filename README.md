@@ -1,6 +1,6 @@
 # gorss
 
-![](./screeshot.png)
+![](./screenshot.png)
 
 From the screenshot, my ~/.config/gorss/gorss file contains:
 ```
