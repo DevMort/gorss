@@ -4,9 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"regexp"
-	"sort"
-	"strings"
 
 	markdown "github.com/MichaelMure/go-term-markdown"
 	"github.com/mmcdole/gofeed"
@@ -60,23 +57,6 @@ func main() {
 	fmt.Scanln(&choice)
 
 	// show item contents
-	desc := markdown.Render(RemoveHtmlTag(feed.Items[choice].Description), 80, 6)
+	desc := markdown.Render(feed.Items[choice].Description, 80, 6)
 	fmt.Printf("\n%v\n\n%v\n%v\n", feed.Items[choice].Title, string(desc), feed.Items[choice].Link)
-}
-
-func RemoveHtmlTag(in string) string {
-	// regex to match html tag
-	const pattern = `(<\/?[a-zA-A]+?[^>]*\/?>)*`
-	r := regexp.MustCompile(pattern)
-	groups := r.FindAllString(in, -1)
-	// should replace long string first
-	sort.Slice(groups, func(i, j int) bool {
-		return len(groups[i]) > len(groups[j])
-	})
-	for _, group := range groups {
-		if strings.TrimSpace(group) != "" {
-			in = strings.ReplaceAll(in, group, "")
-		}
-	}
-	return in
 }
