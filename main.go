@@ -4,8 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
+	"sort"
+	"strings"
 
 	markdown "github.com/MichaelMure/go-term-markdown"
+	"github.com/fatih/color"
 	"github.com/mmcdole/gofeed"
 )
 
@@ -33,7 +37,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("[%v]: %s\n", index, feed.Title)
+		fmt.Printf("[%v]: %s\n", color.CyanString(fmt.Sprint(index)), feed.Title)
 		index++
 	}
 	if err := scanner.Err(); err != nil {
@@ -41,7 +45,7 @@ func main() {
 	}
 
 	// make user choose what to view
-	fmt.Printf("What would you like to view? ")
+	fmt.Printf(color.GreenString("What would you like to view? "))
 	choice := 0
 	fmt.Scanln(&choice)
 
@@ -49,14 +53,31 @@ func main() {
 	feed := feeds[choice-1]
 	fmt.Printf("\n%s\n", feed.Title)
 	for i, item := range feed.Items {
-		fmt.Println(i, item.Title)
+		fmt.Println(color.CyanString(fmt.Sprint(i)), item.Title)
 	}
 
 	// make user choose what to view
-	fmt.Printf("What would you like to view? ")
+	fmt.Printf(color.GreenString("What would you like to view? "))
 	fmt.Scanln(&choice)
 
 	// show item contents
-	desc := markdown.Render(feed.Items[choice].Description, 80, 6)
-	fmt.Printf("\n%v\n\n%v\n%v\n", feed.Items[choice].Title, string(desc), feed.Items[choice].Link)
+	desc := markdown.Render(RemoveHtmlTag(feed.Items[choice].Description), 80, 6)
+	fmt.Printf("\n%v\n\n%v\n%v\n", feed.Items[choice].Title, string(desc), color.YellowString(feed.Items[choice].Link))
+}
+
+func RemoveHtmlTag(in string) string {
+	// regex to match html tag
+	const pattern = `(<\/?[a-zA-A]+?[^>]*\/?>)*`
+	r := regexp.MustCompile(pattern)
+	groups := r.FindAllString(in, -1)
+	// should replace long string first
+	sort.Slice(groups, func(i, j int) bool {
+		return len(groups[i]) > len(groups[j])
+	})
+	for _, group := range groups {
+		if strings.TrimSpace(group) != "" {
+			in = strings.ReplaceAll(in, group, "")
+		}
+	}
+	return in
 }
