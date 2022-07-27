@@ -62,7 +62,8 @@ func main() {
 
 	// show item contents
 	desc := markdown.Render(RemoveHtmlTag(feed.Items[choice].Description), 80, 6)
-	fmt.Printf("\n%v\n\n%v\n%v\n", feed.Items[choice].Title, string(desc), color.YellowString(feed.Items[choice].Link))
+	content := markdown.Render(RemoveHtmlTag(feed.Items[choice].Content), 80, 6)
+	fmt.Printf("\n%v\n\n%v\n%v\n%v\n", feed.Items[choice].Title, string(desc), string(content), color.YellowString(feed.Items[choice].Link))
 }
 
 func RemoveHtmlTag(in string) string {
